@@ -32,26 +32,20 @@ function isValidUrl(url){
   }
 }
 app.post('/api/shorturl', (req,res) =>{
-  const originalUrl = req.body.url?.trim();
-  if(!originalUrl){
+  const originalUrl = req.body.url;
+  if(!originalUrl || !isValidUrl(originalUrl)){
     return res.json({error: "invalid url"});
-  }
-  if(!isNaN(originalUrl)){
-    let index = Number(originalUrl);
-    if(index < 1 || index > urlStorage.length){
-      return res.json({error:"invalid url"});
-    }
-    return res.json({original_url: urlStorage[originalUrl - 1],short_url:originalUrl})
-  }
-  if(!isValidUrl(originalUrl)){
-    return res.json({error:"invalid url"});
   }
   let index = urlStorage.indexOf(originalUrl);
   if(index === -1){
     urlStorage.push(originalUrl);
-    return res.json({original_url: originalUrl, short_url:urlStorage.length});
+    return res.json({original_url: originalUrl, short_url: urlStorage.length});
   }
-  res.json({original_url:originalUrl, short_url:index + 1});
+  res.json({original_url: urlStorage[index], short_url: index + 1});
+})
+app.get('/api/shorturl/:id',(req,res) =>{
+  let {id} = req.params;
+  res.redirect(urlStorage[id - 1]);
 })
 app.listen(port, function() {
   console.log(`Listening on port ${port}`);
