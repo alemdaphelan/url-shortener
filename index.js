@@ -5,7 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({extended:true}));
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
@@ -22,15 +22,14 @@ app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
 });
 let urlStorage = [];
-function isValidUrl(url){
-  try{
-    new URL(url);
-    return true;
-  }
-  catch{
+const isValidUrl = urlString => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (e) {
     return false;
   }
-}
+};
 app.post('/api/shorturl', (req,res) =>{
   const originalUrl = req.body.url;
   if(!originalUrl || !isValidUrl(originalUrl)){
@@ -39,13 +38,13 @@ app.post('/api/shorturl', (req,res) =>{
   let index = urlStorage.indexOf(originalUrl);
   if(index === -1){
     urlStorage.push(originalUrl);
-    return res.json({original_url: originalUrl, short_url: urlStorage.length});
+    return res.status(201).json({original_url: originalUrl, short_url: urlStorage.length});
   }
-  res.json({original_url: urlStorage[index], short_url: index + 1});
+  res.status(201).json({original_url: urlStorage[index], short_url: index + 1});
 })
 app.get('/api/shorturl/:id',(req,res) =>{
   let {id} = req.params;
-  res.redirect(urlStorage[id - 1]);
+  res.redirect(301,urlStorage[parseInt(id) - 1]);
 })
 app.listen(port, function() {
   console.log(`Listening on port ${port}`);
